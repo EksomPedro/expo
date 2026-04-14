@@ -4,6 +4,7 @@
   "exclude": ["**/__mocks__/*", "**/__tests__/*"],
   "compilerOptions": {
     "lib": ["dom", "DOM.Iterable", "esnext"],
+    "rootDir": "./src",
     "outDir": "./build",
     "resolveJsonModule": true
   }

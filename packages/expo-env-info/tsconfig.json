@@ -9,7 +9,8 @@
     "declaration": false,
     "composite": false,
     "module": "es2020",
-    "moduleResolution": "node"
+    "moduleResolution": "bundler",
+    "types": ["node"]
   },
   "exclude": [
     "**/__mocks__/*",

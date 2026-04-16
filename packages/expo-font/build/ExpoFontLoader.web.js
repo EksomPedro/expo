@@ -39,20 +39,18 @@ function getHeadElements() {
     }
     const css = entries.map(([{ css }]) => css).join('\n');
     const links = entries.map(([{ resourceId }]) => resourceId);
-    // TODO: Maybe return nothing if no fonts were loaded.
     return [
         {
-            $$type: 'style',
-            children: css,
-            id: ID,
-            type: 'text/css',
+            type: 'style',
+            css,
+            href: 'expo-fonts',
         },
-        ...links.map((resourceId) => ({
-            $$type: 'link',
+        ...links.map((href) => ({
+            type: 'link',
             rel: 'preload',
-            href: resourceId,
+            href,
             as: 'font',
-            crossorigin: '',
+            crossOrigin: '',
         })),
     ];
 }
@@ -78,16 +76,19 @@ const ExpoFontLoader = {
         const elements = getHeadElements();
         return elements
             .map((element) => {
-            switch (element.$$type) {
+            switch (element.type) {
                 case 'style':
-                    return `<style id="${element.id}">${element.children}</style>`;
+                    return `<style id="${ID}">${element.css}</style>`;
                 case 'link':
-                    return `<link rel="${element.rel}" href="${element.href}" as="${element.as}" crossorigin="${element.crossorigin}" />`;
+                    return `<link rel="${element.rel}" href="${element.href}" as="${element.as}" crossorigin="${element.crossOrigin}" />`;
                 default:
                     return '';
             }
         })
             .filter(Boolean);
+    },
+    getServerResourceDescriptors() {
+        return getHeadElements();
     },
     resetServerContext() {
         serverContext.clear();

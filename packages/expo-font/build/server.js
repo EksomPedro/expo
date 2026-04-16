@@ -12,6 +12,16 @@ export function getServerResources() {
     return ExpoFontLoader.getServerResources();
 }
 /**
+ * @returns the structured server resources that should be statically extracted.
+ * @private
+ */
+export function getServerResourceDescriptors() {
+    if (!ExpoFontLoader.getServerResourceDescriptors) {
+        throw new UnavailabilityError('expo-font', 'getServerResourceDescriptors');
+    }
+    return ExpoFontLoader.getServerResourceDescriptors();
+}
+/**
  * @returns clear the server resources from the global scope.
  * @private
  */

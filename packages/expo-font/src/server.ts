@@ -1,6 +1,6 @@
 import { CodedError, UnavailabilityError } from 'expo-modules-core';
 
-import ExpoFontLoader from './ExpoFontLoader';
+import ExpoFontLoader, { type FontServerResourceDescriptor } from './ExpoFontLoader';
 import { FontSource } from './Font.types';
 import { getAssetForSource, loadSingleFontAsync } from './FontLoader';
 
@@ -13,6 +13,17 @@ export function getServerResources(): string[] {
     throw new UnavailabilityError('expo-font', 'getServerResources');
   }
   return ExpoFontLoader.getServerResources();
+}
+
+/**
+ * @returns the structured server resources that should be statically extracted.
+ * @private
+ */
+export function getServerResourceDescriptors(): FontServerResourceDescriptor[] {
+  if (!ExpoFontLoader.getServerResourceDescriptors) {
+    throw new UnavailabilityError('expo-font', 'getServerResourceDescriptors');
+  }
+  return ExpoFontLoader.getServerResourceDescriptors();
 }
 
 /**

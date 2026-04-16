@@ -1,7 +1,7 @@
 import { CodedError, registerWebModule } from 'expo-modules-core';
 import FontObserver from 'fontfaceobserver';
 
-import type { ExpoFontLoaderModule } from './ExpoFontLoader';
+import type { ExpoFontLoaderModule, FontServerResourceDescriptor } from './ExpoFontLoader';
 import { UnloadFontOptions } from './Font';
 import { FontDisplay, FontResource } from './Font.types';
 
@@ -49,37 +49,29 @@ function getFontFaceRulesMatchingResource(
 
 const serverContext: Set<{ name: string; css: string; resourceId: string }> = new Set();
 
-function getHeadElements(): {
-  $$type: string;
-  rel?: string;
-  href?: string;
-  as?: string;
-  crossorigin?: string;
-  children?: string;
-  id?: string;
-  type?: string;
-}[] {
+function getHeadElements(): FontServerResourceDescriptor[] {
   const entries = [...serverContext.entries()];
   if (!entries.length) {
     return [];
   }
   const css = entries.map(([{ css }]) => css).join('\n');
   const links = entries.map(([{ resourceId }]) => resourceId);
-  // TODO: Maybe return nothing if no fonts were loaded.
   return [
     {
-      $$type: 'style',
-      children: css,
-      id: ID,
-      type: 'text/css',
+      type: 'style',
+      css,
+      href: 'expo-fonts',
     },
-    ...links.map((resourceId) => ({
-      $$type: 'link',
-      rel: 'preload',
-      href: resourceId,
-      as: 'font',
-      crossorigin: '',
-    })),
+    ...links.map(
+      (href) =>
+        ({
+          type: 'link',
+          rel: 'preload',
+          href,
+          as: 'font',
+          crossOrigin: '',
+        }) as const
+    ),
   ];
 }
 
@@ -107,16 +99,20 @@ const ExpoFontLoader: Required<ExpoFontLoaderModule> = {
 
     return elements
       .map((element) => {
-        switch (element.$$type) {
+        switch (element.type) {
           case 'style':
-            return `<style id="${element.id}">${element.children}</style>`;
+            return `<style id="${ID}">${element.css}</style>`;
           case 'link':
-            return `<link rel="${element.rel}" href="${element.href}" as="${element.as}" crossorigin="${element.crossorigin}" />`;
+            return `<link rel="${element.rel}" href="${element.href}" as="${element.as}" crossorigin="${element.crossOrigin}" />`;
           default:
             return '';
         }
       })
       .filter(Boolean);
+  },
+
+  getServerResourceDescriptors(): FontServerResourceDescriptor[] {
+    return getHeadElements();
   },
 
   resetServerContext() {

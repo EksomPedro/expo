@@ -403,6 +403,8 @@ PODS:
     - ExpoModulesCore
   - ExpoCamera (55.0.9):
     - ExpoModulesCore
+  - ExpoCameraBarcodeScanning (55.0.9):
+    - ExpoCamera
     - ZXingObjC/OneD
     - ZXingObjC/PDF417
   - ExpoCellular (55.0.8):
@@ -3279,6 +3281,7 @@ DEPENDENCIES:
   - ExpoBrownfield (from `../../../packages/expo-brownfield/ios`)
   - ExpoCalendar (from `../../../packages/expo-calendar/ios`)
   - ExpoCamera (from `../../../packages/expo-camera/ios`)
+  - ExpoCameraBarcodeScanning (from `../../../packages/expo-camera/ios`)
   - ExpoCellular (from `../../../packages/expo-cellular/ios`)
   - ExpoClipboard (from `../../../packages/expo-clipboard/ios`)
   - ExpoClipboard/Tests (from `../../../packages/expo-clipboard/ios`)
@@ -3539,6 +3542,8 @@ EXTERNAL SOURCES:
     :path: "../../../packages/expo-calendar/ios"
   ExpoCamera:
     inhibit_warnings: false
+    :path: "../../../packages/expo-camera/ios"
+  ExpoCameraBarcodeScanning:
     :path: "../../../packages/expo-camera/ios"
   ExpoCellular:
     inhibit_warnings: false
@@ -3937,7 +3942,8 @@ SPEC CHECKSUMS:
   ExpoBrightness: d1d486e406bcc66acbd5d0101bf7785d5f35fd88
   ExpoBrownfield: b154b7dd081e0315d7e55f3d52984ea151854413
   ExpoCalendar: d21041bc88e41a4d187196157568fd1310b59fc7
-  ExpoCamera: 3482cd1985d1ffb6251f8edcc6a0cc01fb367c50
+  ExpoCamera: e95e370de0bf60152a6ccfd23e5d9492b947b701
+  ExpoCameraBarcodeScanning: 0fd8335acfaef17a1690461ae6f0c2b817948668
   ExpoCellular: 7d53af5a8e82d326a5c7bc79443166eca4515fc5
   ExpoClipboard: 0acdce934cb6a71b507da1117399645265e51ed5
   ExpoContacts: 9b79a617546de1855e2267550e1f7a026afd2e9c
@@ -4106,6 +4112,6 @@ SPEC CHECKSUMS:
   Yoga: e83c3121d079541e69f3c5c623faaaf933fb5812
   ZXingObjC: 8898711ab495761b2dbbdec76d90164a6d7e14c5
 
-PODFILE CHECKSUM: a63ddafbc2bc8dd131f1bd3f4790fd1cf3a50279
+PODFILE CHECKSUM: 7df6831a3f59b622e60d2578195aceb45270c92d
 
 COCOAPODS: 1.16.2

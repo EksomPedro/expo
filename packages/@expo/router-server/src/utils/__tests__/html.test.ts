@@ -1,4 +1,5 @@
 import {
+  createBootstrapScriptContent,
   createInjectedCssElements,
   createInjectedScriptElements,
   createLoaderDataScript,
@@ -113,6 +114,19 @@ describe(createLoaderDataScript, () => {
     expect(result).toContain('JSON.parse(');
     expect(result).toContain(
       '\\\\u003cscript\\\\u003ealert(\\\\\\"xss\\\\\\")\\\\u003c/script\\\\u003e'
+    );
+  });
+});
+
+describe(createBootstrapScriptContent, () => {
+  it('returns the hydration flag by default', () => {
+    expect(createBootstrapScriptContent()).toBe('globalThis.__EXPO_ROUTER_HYDRATE__=true;');
+  });
+
+  it('embeds loader data when provided', () => {
+    expect(createBootstrapScriptContent({ '/': { foo: 'bar' } })).toBe(
+      'globalThis.__EXPO_ROUTER_HYDRATE__=true;\n' +
+        'globalThis.__EXPO_ROUTER_LOADER_DATA__ = JSON.parse("{\\"/\\":{\\"foo\\":\\"bar\\"}}");'
     );
   });
 });

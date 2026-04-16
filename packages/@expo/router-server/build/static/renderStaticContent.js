@@ -56,7 +56,6 @@ const server_1 = __importDefault(require("react-dom/server"));
 const getRootComponent_1 = require("./getRootComponent");
 const debug_1 = require("../utils/debug");
 const html_1 = require("../utils/html");
-const streams_1 = require("../utils/streams");
 const debug = (0, debug_1.createDebug)('expo:router:server:renderStaticContent');
 function resetReactNavigationContexts() {
     // https://github.com/expo/router/discussions/588
@@ -136,48 +135,49 @@ function mixHeadComponentsWithStaticResults(helmet, html) {
     html = html.replace('<body ', `<body ${bodyAttributes} `);
     return html;
 }
+function FontResources() {
+    const resources = Font.getServerResourceDescriptors();
+    debug(`Pushing static fonts: (count: ${resources.length})`, resources);
+    return (<>
+      {resources.map((resource, index) => {
+            switch (resource.type) {
+                case 'style':
+                    return (<style key={`font-style:${index}`} href={resource.href} precedence="expo-font" dangerouslySetInnerHTML={{ __html: resource.css }}/>);
+                case 'link':
+                    return (<link key={`font-preload:${resource.href}`} rel={resource.rel} href={resource.href} as={resource.as} crossOrigin={resource.crossOrigin}/>);
+            }
+        })}
+    </>);
+}
+function StreamingDocumentBodyNodes({ cssHrefs, getStyleElement, }) {
+    return (<>
+      {(0, html_1.createReactNativeWebStylesheetResource)(getStyleElement())}
+      <FontResources />
+      {(0, html_1.createStylesheetResourceElements)(cssHrefs)}
+    </>);
+}
 /**
- * Streaming SSR renderer using `renderToReadableStream`. Returns a web `ReadableStream`
- * that emits the full HTML document with head injections applied.
- *
- * `<head>` tags are captured from shell-ready render state. Metadata produced only after suspended
- * or async work resolves is not guaranteed to appear in the initial HTML head and will reconcile on
- * the client after hydration instead.
+ * Streaming SSR renderer using `renderToReadableStream`. Returns the React-owned HTML stream
+ * directly without any post-render HTML mutation.
  *
  * @privateRemarks This function should be moved to a separate file
  * (i.e. `renderStreamingContent.tsx`) as it doesn't belong with static rendering logic.
  */
 async function getStreamingContent(location, options) {
     const { headContext, element, getStyleElement, loadedData } = prepareRenderContext(location, options);
-    const stream = await server_1.default.renderToReadableStream(<head_1.default.Provider context={headContext}>
-      <static_1.InnerRoot loadedData={loadedData}>{element}</static_1.InnerRoot>
-    </head_1.default.Provider>, {
+    const documentPayload = {
+        bodyNodes: (<StreamingDocumentBodyNodes cssHrefs={options?.assets?.css ?? []} getStyleElement={getStyleElement}/>),
+    };
+    const stream = await server_1.default.renderToReadableStream(<static_1.ServerDocument value={documentPayload}>
+      <head_1.default.Provider context={headContext}>
+        <static_1.InnerRoot loadedData={loadedData}>{element}</static_1.InnerRoot>
+      </head_1.default.Provider>
+    </static_1.ServerDocument>, {
+        bootstrapScriptContent: (0, html_1.createBootstrapScriptContent)(loadedData),
         bootstrapScripts: options?.assets?.js,
         signal: options?.request?.signal,
     });
-    // Collect head injection content after the shell stream is ready.
-    const css = server_1.default.renderToStaticMarkup(getStyleElement());
-    const { headTags, htmlAttributes, bodyAttributes } = (0, html_1.serializeHelmetToHtml)(headContext.helmet);
-    const fonts = Font.getServerResources();
-    debug(`Pushing static fonts: (count: ${fonts.length})`, fonts);
-    const injectionParts = [];
-    if (headTags)
-        injectionParts.push(headTags);
-    injectionParts.push((0, html_1.getHydrationFlagScript)());
-    if (css)
-        injectionParts.push(css);
-    if (fonts.length > 0)
-        injectionParts.push(fonts.join(''));
-    if (loadedData)
-        injectionParts.push((0, html_1.createLoaderDataScript)(loadedData));
-    if (options?.assets?.css && options.assets.css.length > 0) {
-        injectionParts.push((0, html_1.createInjectedCssElements)(options.assets.css));
-    }
-    return stream.pipeThrough((0, streams_1.createDocumentMetadataInjectionTransform)({
-        injectionParts,
-        htmlAttributes,
-        bodyAttributes,
-    }));
+    return stream;
 }
 // Re-export for use in server
 var getServerManifest_1 = require("./getServerManifest");

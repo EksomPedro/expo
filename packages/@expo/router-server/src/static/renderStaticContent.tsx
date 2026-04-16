@@ -10,7 +10,12 @@ import * as Font from 'expo-font/build/server';
 import { ExpoRoot } from 'expo-router';
 import { ctx } from 'expo-router/_ctx';
 import Head from 'expo-router/head';
-import { InnerRoot, registerStaticRootComponent } from 'expo-router/internal/static';
+import {
+  InnerRoot,
+  ServerDocument,
+  type ServerDocumentPayload,
+  registerStaticRootComponent,
+} from 'expo-router/internal/static';
 import React from 'react';
 import ReactDOMServer from 'react-dom/server';
 
@@ -19,11 +24,12 @@ import { createDebug } from '../utils/debug';
 import {
   createInjectedCssElements,
   createInjectedScriptElements,
+  createBootstrapScriptContent,
+  createReactNativeWebStylesheetResource,
+  createStylesheetResourceElements,
   createLoaderDataScript,
-  getHydrationFlagScript,
   serializeHelmetToHtml,
 } from '../utils/html';
-import { createDocumentMetadataInjectionTransform } from '../utils/streams';
 
 const debug = createDebug('expo:router:server:renderStaticContent');
 
@@ -156,13 +162,58 @@ function mixHeadComponentsWithStaticResults(helmet: any, html: string) {
   return html;
 }
 
+function FontResources() {
+  const resources = Font.getServerResourceDescriptors();
+  debug(`Pushing static fonts: (count: ${resources.length})`, resources);
+
+  return (
+    <>
+      {resources.map((resource, index) => {
+        switch (resource.type) {
+          case 'style':
+            return (
+              <style
+                key={`font-style:${index}`}
+                href={resource.href}
+                precedence="expo-font"
+                dangerouslySetInnerHTML={{ __html: resource.css }}
+              />
+            );
+          case 'link':
+            return (
+              <link
+                key={`font-preload:${resource.href}`}
+                rel={resource.rel}
+                href={resource.href}
+                as={resource.as}
+                crossOrigin={resource.crossOrigin}
+              />
+            );
+        }
+      })}
+    </>
+  );
+}
+
+function StreamingDocumentBodyNodes({
+  cssHrefs,
+  getStyleElement,
+}: {
+  cssHrefs: string[];
+  getStyleElement: () => React.ReactNode;
+}) {
+  return (
+    <>
+      {createReactNativeWebStylesheetResource(getStyleElement())}
+      <FontResources />
+      {createStylesheetResourceElements(cssHrefs)}
+    </>
+  );
+}
+
 /**
- * Streaming SSR renderer using `renderToReadableStream`. Returns a web `ReadableStream`
- * that emits the full HTML document with head injections applied.
- *
- * `<head>` tags are captured from shell-ready render state. Metadata produced only after suspended
- * or async work resolves is not guaranteed to appear in the initial HTML head and will reconcile on
- * the client after hydration instead.
+ * Streaming SSR renderer using `renderToReadableStream`. Returns the React-owned HTML stream
+ * directly without any post-render HTML mutation.
  *
  * @privateRemarks This function should be moved to a separate file
  * (i.e. `renderStreamingContent.tsx`) as it doesn't belong with static rendering logic.
@@ -176,39 +227,29 @@ export async function getStreamingContent(
     options
   );
 
+  const documentPayload: ServerDocumentPayload = {
+    bodyNodes: (
+      <StreamingDocumentBodyNodes
+        cssHrefs={options?.assets?.css ?? []}
+        getStyleElement={getStyleElement}
+      />
+    ),
+  };
+
   const stream = await ReactDOMServer.renderToReadableStream(
-    <Head.Provider context={headContext}>
-      <InnerRoot loadedData={loadedData}>{element}</InnerRoot>
-    </Head.Provider>,
+    <ServerDocument value={documentPayload}>
+      <Head.Provider context={headContext}>
+        <InnerRoot loadedData={loadedData}>{element}</InnerRoot>
+      </Head.Provider>
+    </ServerDocument>,
     {
+      bootstrapScriptContent: createBootstrapScriptContent(loadedData),
       bootstrapScripts: options?.assets?.js,
       signal: options?.request?.signal,
     }
   );
 
-  // Collect head injection content after the shell stream is ready.
-  const css = ReactDOMServer.renderToStaticMarkup(getStyleElement());
-  const { headTags, htmlAttributes, bodyAttributes } = serializeHelmetToHtml(headContext.helmet);
-  const fonts = Font.getServerResources();
-  debug(`Pushing static fonts: (count: ${fonts.length})`, fonts);
-
-  const injectionParts: string[] = [];
-  if (headTags) injectionParts.push(headTags);
-  injectionParts.push(getHydrationFlagScript());
-  if (css) injectionParts.push(css);
-  if (fonts.length > 0) injectionParts.push(fonts.join(''));
-  if (loadedData) injectionParts.push(createLoaderDataScript(loadedData));
-  if (options?.assets?.css && options.assets.css.length > 0) {
-    injectionParts.push(createInjectedCssElements(options.assets.css));
-  }
-
-  return stream.pipeThrough(
-    createDocumentMetadataInjectionTransform({
-      injectionParts,
-      htmlAttributes,
-      bodyAttributes,
-    })
-  );
+  return stream;
 }
 
 // Re-export for use in server

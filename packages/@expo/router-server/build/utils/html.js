@@ -1,17 +1,24 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.escapeUnsafeCharacters = escapeUnsafeCharacters;
+exports.createInjectedCssElements = createInjectedCssElements;
+exports.createStylesheetResourceElements = createStylesheetResourceElements;
+exports.createReactNativeWebStylesheetResource = createReactNativeWebStylesheetResource;
+exports.createInjectedScriptElements = createInjectedScriptElements;
+exports.getHydrationFlagScript = getHydrationFlagScript;
+exports.createLoaderDataScript = createLoaderDataScript;
+exports.createBootstrapScriptContent = createBootstrapScriptContent;
+exports.serializeHelmetToHtml = serializeHelmetToHtml;
 /**
  * Copyright © 2023 650 Industries.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.escapeUnsafeCharacters = escapeUnsafeCharacters;
-exports.createInjectedCssElements = createInjectedCssElements;
-exports.createInjectedScriptElements = createInjectedScriptElements;
-exports.getHydrationFlagScript = getHydrationFlagScript;
-exports.createLoaderDataScript = createLoaderDataScript;
-exports.serializeHelmetToHtml = serializeHelmetToHtml;
+const react_1 = __importDefault(require("react"));
 // See: https://github.com/urql-graphql/urql/blob/ad0276ae616b2b2f2cd01a527b4217ae35c3fa2d/packages/next-urql/src/htmlescape.ts#L10
 // License: https://github.com/urql-graphql/urql/blob/ad0276ae616b2b2f2cd01a527b4217ae35c3fa2d/LICENSE
 // This utility is based on https://github.com/zertosh/htmlescape
@@ -46,6 +53,47 @@ function createInjectedCssElements(hrefs) {
     ])
         .join('\n');
 }
+function createStylesheetResourceElements(hrefs) {
+    return hrefs.flatMap((href) => [
+        react_1.default.createElement('link', {
+            key: `preload:${href}`,
+            rel: 'preload',
+            href,
+            as: 'style',
+        }),
+        react_1.default.createElement('link', {
+            key: `stylesheet:${href}`,
+            rel: 'stylesheet',
+            href,
+            precedence: 'default',
+        }),
+    ]);
+}
+function getStyleText(styleElement) {
+    if (styleElement.props.dangerouslySetInnerHTML?.__html) {
+        return styleElement.props.dangerouslySetInnerHTML.__html;
+    }
+    return react_1.default.Children.toArray(styleElement.props.children).join('');
+}
+function createReactNativeWebStylesheetResource(styleElement) {
+    // `registerStaticRootComponent().getStyleElement()` currently returns a single RNW `<style>`
+    // element. Keep this adapter narrow so the single-pass contract stays explicit.
+    if (!react_1.default.isValidElement(styleElement) || styleElement.type !== 'style') {
+        return null;
+    }
+    const element = styleElement;
+    const cssText = getStyleText(element);
+    if (!cssText) {
+        return null;
+    }
+    const href = String(element.props.id ?? 'react-native-stylesheet');
+    return react_1.default.createElement('style', {
+        key: href,
+        href,
+        precedence: 'react-native',
+        dangerouslySetInnerHTML: { __html: cssText },
+    });
+}
 /**
  * Returns newline-separated `<script defer>` HTML strings for each JavaScript source URL.
  *
@@ -75,6 +123,14 @@ function getHydrationFlagScript() {
 function createLoaderDataScript(data) {
     const safeJson = escapeUnsafeCharacters(JSON.stringify(data));
     return `<script id="expo-router-data">globalThis.__EXPO_ROUTER_LOADER_DATA__ = JSON.parse(${JSON.stringify(safeJson)});</script>`;
+}
+function createBootstrapScriptContent(data) {
+    const lines = ['globalThis.__EXPO_ROUTER_HYDRATE__=true;'];
+    if (data) {
+        const safeJson = escapeUnsafeCharacters(JSON.stringify(data));
+        lines.push(`globalThis.__EXPO_ROUTER_LOADER_DATA__ = JSON.parse(${JSON.stringify(safeJson)});`);
+    }
+    return lines.join('\n');
 }
 const HELMET_HEAD_KEYS = ['title', 'priority', 'meta', 'link', 'script', 'style'];
 /**

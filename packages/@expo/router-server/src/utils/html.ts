@@ -4,6 +4,7 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
+import React from 'react';
 
 // See: https://github.com/urql-graphql/urql/blob/ad0276ae616b2b2f2cd01a527b4217ae35c3fa2d/packages/next-urql/src/htmlescape.ts#L10
 // License: https://github.com/urql-graphql/urql/blob/ad0276ae616b2b2f2cd01a527b4217ae35c3fa2d/LICENSE
@@ -44,6 +45,54 @@ export function createInjectedCssElements(hrefs: string[]): string {
     .join('\n');
 }
 
+export function createStylesheetResourceElements(hrefs: string[]): React.ReactNode[] {
+  return hrefs.flatMap((href) => [
+    React.createElement('link', {
+      key: `preload:${href}`,
+      rel: 'preload',
+      href,
+      as: 'style',
+    }),
+    React.createElement('link', {
+      key: `stylesheet:${href}`,
+      rel: 'stylesheet',
+      href,
+      precedence: 'default',
+    }),
+  ]);
+}
+
+function getStyleText(styleElement: React.ReactElement<any>): string {
+  if (styleElement.props.dangerouslySetInnerHTML?.__html) {
+    return styleElement.props.dangerouslySetInnerHTML.__html;
+  }
+  return React.Children.toArray(styleElement.props.children).join('');
+}
+
+export function createReactNativeWebStylesheetResource(
+  styleElement: React.ReactNode
+): React.ReactElement | null {
+  // `registerStaticRootComponent().getStyleElement()` currently returns a single RNW `<style>`
+  // element. Keep this adapter narrow so the single-pass contract stays explicit.
+  if (!React.isValidElement(styleElement) || styleElement.type !== 'style') {
+    return null;
+  }
+
+  const element = styleElement as React.ReactElement<any>;
+  const cssText = getStyleText(element);
+  if (!cssText) {
+    return null;
+  }
+
+  const href = String(element.props.id ?? 'react-native-stylesheet');
+  return React.createElement('style', {
+    key: href,
+    href,
+    precedence: 'react-native',
+    dangerouslySetInnerHTML: { __html: cssText },
+  });
+}
+
 /**
  * Returns newline-separated `<script defer>` HTML strings for each JavaScript source URL.
  *
@@ -77,8 +126,16 @@ export function createLoaderDataScript(data: Record<string, unknown>): string {
   return `<script id="expo-router-data">globalThis.__EXPO_ROUTER_LOADER_DATA__ = JSON.parse(${JSON.stringify(safeJson)});</script>`;
 }
 
-const HELMET_HEAD_KEYS = ['title', 'priority', 'meta', 'link', 'script', 'style'] as const;
+export function createBootstrapScriptContent(data?: Record<string, unknown> | null): string {
+  const lines = ['globalThis.__EXPO_ROUTER_HYDRATE__=true;'];
+  if (data) {
+    const safeJson = escapeUnsafeCharacters(JSON.stringify(data));
+    lines.push(`globalThis.__EXPO_ROUTER_LOADER_DATA__ = JSON.parse(${JSON.stringify(safeJson)});`);
+  }
+  return lines.join('\n');
+}
 
+const HELMET_HEAD_KEYS = ['title', 'priority', 'meta', 'link', 'script', 'style'] as const;
 /**
  * Extracts head tags and document attributes from a `react-helmet-async` helmet instance.
  *

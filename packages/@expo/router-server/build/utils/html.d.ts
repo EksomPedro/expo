@@ -4,6 +4,7 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
+import React from 'react';
 /**
  * Replaces unsafe characters in a string with their escaped equivalents. This is to safely
  * embed data in an HTML context to prevent XSS.
@@ -17,6 +18,8 @@ export declare function escapeUnsafeCharacters(str: string): string;
  * document's `<body>` element.
  */
 export declare function createInjectedCssElements(hrefs: string[]): string;
+export declare function createStylesheetResourceElements(hrefs: string[]): React.ReactNode[];
+export declare function createReactNativeWebStylesheetResource(styleElement: React.ReactNode): React.ReactElement | null;
 /**
  * Returns newline-separated `<script defer>` HTML strings for each JavaScript source URL.
  *
@@ -40,6 +43,7 @@ export declare function getHydrationFlagScript(): string;
  * @see https://v8.dev/blog/cost-of-javascript-2019#json
  */
 export declare function createLoaderDataScript(data: Record<string, unknown>): string;
+export declare function createBootstrapScriptContent(data?: Record<string, unknown> | null): string;
 /**
  * Extracts head tags and document attributes from a `react-helmet-async` helmet instance.
  *

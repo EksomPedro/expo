@@ -2,10 +2,12 @@
 
 import { usePathname } from 'expo-router';
 import { ScrollViewStyleReset } from 'expo-router/html';
+import { useServerDocumentContext } from 'expo-router/internal/static';
 
 export default function Html({ children }) {
   // Test that this is defined and works during SSR.
   const pathname = usePathname();
+  const { bodyNodes } = useServerDocumentContext();
 
   return (
     <html lang="en">
@@ -22,7 +24,10 @@ export default function Html({ children }) {
         <meta name="expo-e2e-private-env-var" content={process.env.EXPO_NOT_PUBLIC_TEST_VALUE} />
         <ScrollViewStyleReset />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        {bodyNodes}
+      </body>
     </html>
   );
 }

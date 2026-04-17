@@ -5,6 +5,7 @@
   "compilerOptions": {
     "lib": ["dom", "esnext"],
     "rootDir": "./src",
-    "outDir": "./build"
+    "outDir": "./build",
+    "types": ["jest"]
   }
 }

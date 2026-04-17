@@ -1,4 +1,4 @@
-import { type ColorSchemeName, StyleProp, ViewStyle } from 'react-native';
+import { type ColorSchemeName, type ColorValue, StyleProp, ViewStyle } from 'react-native';
 import { PrimitiveBaseProps } from '../layout';
 export type HostProps = {
     /**
@@ -27,9 +27,19 @@ export type HostProps = {
      */
     useViewportSizeMeasurement?: boolean;
     /**
-     * The color scheme of the host view.
+     * The color scheme of the host view. `'light'` / `'dark'` force a specific
+     * appearance; omitted follows the device setting. The palette itself
+     * follows the device wallpaper on Android 12+ (Material You) or the static
+     * Material 3 baseline otherwise — unless {@link seedColor} is set.
      */
     colorScheme?: ColorSchemeName;
+    /**
+     * Seed color used to generate a Material 3 palette (`SchemeTonalSpot`) for
+     * this host. Combines with `colorScheme` (`'light'` / `'dark'` or omitted)
+     * to produce a seeded palette that themes Compose children and is
+     * available to descendants via `useMaterialColors()`.
+     */
+    seedColor?: ColorValue;
     /**
      * The layout direction for the content.
      * Defaults to the current locale direction from I18nManager.

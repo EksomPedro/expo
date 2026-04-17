@@ -2435,7 +2435,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - react-native-webview (13.16.0):
+  - react-native-webview (13.16.1):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -3394,7 +3394,7 @@ DEPENDENCIES:
   - "react-native-skia (from `../../../node_modules/.pnpm/@shopify+react-native-skia@2.4.18_react-native-reanimated@4.3.0_patch_hash=1e34e4238541_94ae84bf1cbc518debd3d3e9730d46fe/node_modules/@shopify/react-native-skia`)"
   - "react-native-slider (from `../../../node_modules/.pnpm/@react-native-community+slider@5.1.2/node_modules/@react-native-community/slider`)"
   - "react-native-view-shot (from `../../../node_modules/.pnpm/react-native-view-shot@4.0.3_patch_hash=c493165ff680241f9c0432f4619a8f581420b9f8dd9c6e8_4b215dacccf80e458221268de6d3f3c0/node_modules/react-native-view-shot`)"
-  - "react-native-webview (from `../../../node_modules/.pnpm/react-native-webview@13.16.0_react-native@0.85.0_@babel+core@7.29.0_@react-native+jest-_fedb10ab70bceed7f2969543e6d25c73/node_modules/react-native-webview`)"
+  - "react-native-webview (from `../../../node_modules/.pnpm/react-native-webview@13.16.1_react-native@0.85.0_@babel+core@7.29.0_@react-native+jest-_ce53827c92cb453c2cf2efe9c209b61d/node_modules/react-native-webview`)"
   - "React-NativeModulesApple (from `../../../node_modules/.pnpm/react-native@0.85.0_@babel+core@7.29.0_@react-native+jest-preset@0.85.0_@babel+core@7.2_dbb5c14d9fd5c9bb3d7d1e4c732bd070/node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios`)"
   - "React-networking (from `../../../node_modules/.pnpm/react-native@0.85.0_@babel+core@7.29.0_@react-native+jest-preset@0.85.0_@babel+core@7.2_dbb5c14d9fd5c9bb3d7d1e4c732bd070/node_modules/react-native/ReactCommon/react/networking`)"
   - "React-oscompat (from `../../../node_modules/.pnpm/react-native@0.85.0_@babel+core@7.29.0_@react-native+jest-preset@0.85.0_@babel+core@7.2_dbb5c14d9fd5c9bb3d7d1e4c732bd070/node_modules/react-native/ReactCommon/oscompat`)"
@@ -3808,7 +3808,7 @@ EXTERNAL SOURCES:
   react-native-view-shot:
     :path: "../../../node_modules/.pnpm/react-native-view-shot@4.0.3_patch_hash=c493165ff680241f9c0432f4619a8f581420b9f8dd9c6e8_4b215dacccf80e458221268de6d3f3c0/node_modules/react-native-view-shot"
   react-native-webview:
-    :path: "../../../node_modules/.pnpm/react-native-webview@13.16.0_react-native@0.85.0_@babel+core@7.29.0_@react-native+jest-_fedb10ab70bceed7f2969543e6d25c73/node_modules/react-native-webview"
+    :path: "../../../node_modules/.pnpm/react-native-webview@13.16.1_react-native@0.85.0_@babel+core@7.29.0_@react-native+jest-_ce53827c92cb453c2cf2efe9c209b61d/node_modules/react-native-webview"
   React-NativeModulesApple:
     :path: "../../../node_modules/.pnpm/react-native@0.85.0_@babel+core@7.29.0_@react-native+jest-preset@0.85.0_@babel+core@7.2_dbb5c14d9fd5c9bb3d7d1e4c732bd070/node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios"
   React-networking:
@@ -3994,7 +3994,7 @@ SPEC CHECKSUMS:
   EXUpdates: a0f980531cbcf45906b2489febd4e11a5895f332
   EXUpdatesInterface: 5ab8c3e8018ef533a132b9327af5b2a1926dd299
   FBLazyVector: c00c20551d40126351a6783c47ce75f5b374851b
-  hermes-engine: 407f52f1dca2c25263c5f76e80cc38a39e0f6ec0
+  hermes-engine: 725fd85144e1348879039099a6be950c471a4f2c
   libavif: 5f8e715bea24debec477006f21ef9e95432e254d
   libdav1d: 23581a4d8ec811ff171ed5e2e05cd27bad64c39f
   libwebp: 02b23773aedb6ff1fd38cec7a77b81414c6842a8
@@ -4012,7 +4012,7 @@ SPEC CHECKSUMS:
   React: 1b1536b9099195944034e65b1830f463caaa8390
   React-callinvoker: 6dff6d17d1d6cc8fdf85468a649bafed473c65f5
   React-Core: 00faa4d038298089a1d5a5b21dde8660c4f0820d
-  React-Core-prebuilt: 705f99b0bd56f86a0236e6fcdc1050e9d688561a
+  React-Core-prebuilt: 90227d29159eefbb7ba8c84cc1f095a68bb2c582
   React-CoreModules: a17807f849bfd86045b0b9a75ec8c19373b482f6
   React-cxxreact: c7b53ace5827be54048288bce5c55f337c41e95f
   React-debug: e1f00fcd2cef58a2897471a6d76a4ef5f5f90c74
@@ -4048,7 +4048,7 @@ SPEC CHECKSUMS:
   react-native-skia: 93613a9428b7f33530e5e085e95a89f023548320
   react-native-slider: f9910f69950b9953c46e091377c1265b71eb01f0
   react-native-view-shot: 5fe893f10cadc5949a3b9b44d75df16633fa8ef4
-  react-native-webview: 96c45c7e019eeaae562589b78b67924d5816d2c1
+  react-native-webview: 2da09bdea1aeb6c46e27dd94632e21059cade6c1
   React-NativeModulesApple: 9c1f8815ebd72cc1c75587fe588513f6dd9cb708
   React-networking: 8f75f882c6794e91e28b458b5bc1461034098c80
   React-oscompat: 5361d0fa7905ba1c3b3c5e7c464d6be9d2d85f4b
@@ -4082,7 +4082,7 @@ SPEC CHECKSUMS:
   ReactAppDependencyProvider: 5787b37b8e2e51dfeab697ec031cc7c4080dcea2
   ReactCodegen: c6d3cb3ac0f52891ba8d0fb1ddadaca8f4491df2
   ReactCommon: fe2a3af8975e63efa60f95fca8c34dc85deee360
-  ReactNativeDependencies: 0c3e1ac9f777b276b1b6bf0d630829e3c72d54ad
+  ReactNativeDependencies: 511cad08f3f5c96333ac3cfb56ec12027ba6fa1f
   RNCAsyncStorage: 2ad919e88b8bc2cd80e8697ce66d04d006743283
   RNCMaskedView: eb2b2e538afa907f05a5848a1a1ac26092e6fec9
   RNCPicker: d74667bdfc08ed389a2a277d95b8faf2349290a9

@@ -9,6 +9,7 @@
     "module": "preserve",
     "moduleResolution": "bundler",
     "declaration": false,
-    "composite": false
+    "composite": false,
+    "types": ["jest"]
   }
 }

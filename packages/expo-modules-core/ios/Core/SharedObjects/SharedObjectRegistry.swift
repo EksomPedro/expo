@@ -1,14 +1,11 @@
 // Copyright 2022-present 650 Industries. All rights reserved.
 
+import ExpoModulesJSI
+
 /**
  Type of the IDs of shared objects.
  */
 public typealias SharedObjectId = Int
-
-/**
- A tuple containing a pair of matching native and JS objects.
- */
-internal typealias SharedObjectPair = (native: SharedObject, javaScript: JavaScriptWeakObject)
 
 /**
  Property name of the JS object where the shared object ID is stored.
@@ -20,6 +17,26 @@ let sharedObjectIdPropertyName = "__expo_shared_object_id__"
  It's been made static for simplicity.
  */
 public final class SharedObjectRegistry {
+  /**
+   Reference-type holder for a non-copyable `JavaScriptWeakObject`, so it can be stored
+   in a dictionary value alongside the paired `SharedObject`.
+   */
+  final class WeakObject: @unchecked Sendable {
+    private let weakObject: JavaScriptWeakObject
+
+    init(_ weakObject: consuming JavaScriptWeakObject) {
+      self.weakObject = weakObject
+    }
+
+    func lock() -> JavaScriptObject? {
+      return weakObject.lock()
+    }
+  }
+
+  /**
+   A tuple containing a pair of matching native and JS objects.
+   */
+  internal typealias SharedObjectPair = (native: SharedObject, javaScript: WeakObject)
   /**
    Weak reference to the app context for the registry.
    */
@@ -61,8 +78,10 @@ public final class SharedObjectRegistry {
   /**
    Shared object releaser that is common to all instances.
    */
-  private lazy var objectReleaser: (SharedObjectId) -> Void = { [weak self] objectId in
-    self?.delete(objectId)
+  private lazy var objectReleaser: JavaScriptNativeState.Deallocator = { [weak self] nativeState in
+    if let nativeState = nativeState as? SharedObjectNativeState {
+      self?.delete(nativeState.id)
+    }
   }
 
   /**
@@ -97,7 +116,7 @@ public final class SharedObjectRegistry {
    Adds a pair of native and JS shared object to the registry. Assigns a new shared object ID to these objects.
    */
   @discardableResult
-  internal func add(native nativeObject: SharedObject, javaScript jsObject: JavaScriptObject) -> SharedObjectId {
+  internal func add(native nativeObject: SharedObject, javaScript jsObject: borrowing JavaScriptObject) -> SharedObjectId {
     let id = pullNextId()
 
     // Assign the ID and the app context to the object.
@@ -114,19 +133,27 @@ public final class SharedObjectRegistry {
     }
 
     // Set the native state and memory footprint in the JS object.
-    if let runtime = try? appContext?.runtime {
-      SharedObjectUtils.setNativeState(jsObject, runtime: runtime, objectId: id, releaser: objectReleaser)
-
-      let memoryPressure = nativeObject.getAdditionalMemoryPressure()
-      if memoryPressure > 0 {
-        jsObject.setExternalMemoryPressure(memoryPressure)
-      }
+    let nativeState = SharedObjectNativeState(id: id)
+    do {
+      try nativeState.setDeallocator(objectReleaser)
+      try jsObject.setNativeState(nativeState)
+    } catch {
+      log.error("Failed to register shared object '\(type(of: nativeObject))': \(error)")
+      nativeObject.sharedObjectId = 0
+      nativeObject.appContext = nil
+      return 0
     }
 
-    // Save the pair in the dictionary.
-    let jsWeakObject = jsObject.createWeak()
+    let memoryPressure = nativeObject.getAdditionalMemoryPressure()
+    if memoryPressure > 0 {
+      jsObject.setExternalMemoryPressure(memoryPressure)
+    }
+
+    // Save the pair in the dictionary with a weak reference to the JS object so
+    // the JS engine can still garbage-collect it. When it does, the native state's
+    // deallocator fires and removes the pair via `delete(_:)`.
     state.withLock { state in
-      state.pairs[id] = (native: nativeObject, javaScript: jsWeakObject)
+      state.pairs[id] = (native: nativeObject, javaScript: WeakObject(jsObject.createWeak()))
     }
 
     return id
@@ -152,7 +179,8 @@ public final class SharedObjectRegistry {
   /**
    Gets the native shared object that is paired with a given JS object.
    */
-  internal func toNativeObject(_ jsObject: JavaScriptObject) -> SharedObject? {
+  @JavaScriptActor
+  internal func toNativeObject(_ jsObject: borrowing JavaScriptObject) -> SharedObject? {
     if let objectId = try? jsObject.getProperty(sharedObjectIdPropertyName).asInt() {
       return state.withLock { state in
         return state.pairs[objectId]?.native
@@ -162,13 +190,22 @@ public final class SharedObjectRegistry {
   }
 
   /**
+   Gets the JS value of the shared object that is paired with a given native object.
+   Returns `nil` if the JS object has already been garbage-collected.
+   */
+  internal func toJavaScriptValue(_ nativeObject: SharedObject) -> JavaScriptValue? {
+    let objectId = nativeObject.sharedObjectId
+    let weakObject = state.withLock { state in
+      return state.pairs[objectId]?.javaScript
+    }
+    return weakObject?.lock()?.asValue()
+  }
+
+  /**
    Gets the JS shared object that is paired with a given native object.
    */
   internal func toJavaScriptObject(_ nativeObject: SharedObject) -> JavaScriptObject? {
-    let objectId = nativeObject.sharedObjectId
-    return state.withLock { state in
-      return state.pairs[objectId]?.javaScript.lock()
-    }
+    return toJavaScriptValue(nativeObject)?.getObject()
   }
 
   /**

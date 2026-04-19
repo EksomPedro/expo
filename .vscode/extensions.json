@@ -1,8 +1,11 @@
-{
-  "recommendations": [
-    "dbaeumer.vscode-eslint",
-    "esbenp.prettier-vscode",
-    "stkb.rewrap",
-    "unifiedjs.vscode-mdx"
-  ]
-}
+APP (Flutter)
+   ↓
+API (Node.js)
+   ↓
+Fila (Redis)
+   ↓
+Workers (IA pesada)
+   ↓
+Storage (vídeos)
+   ↓
+YouTube API (postagem)
